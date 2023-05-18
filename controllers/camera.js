@@ -7,6 +7,9 @@ export const addCamera = async (req, res) => {
   logger.info(JSON.stringify({ api: "/camera/addcamera", ...req.body }));
   try {
     const { userId, serialNumber, modelNumber, friendlyName } = req.body;
+    if (!userId || !serialNumber || !modelNumber || !friendlyName) {
+      throw new Error("Please provide complete parameters");
+    }
     const productId = await ProductMaster.find({ modelNumber: modelNumber });
     const doesSerialNumberExist = await ProductSerialNumberMaster.find({
       serialNumber: serialNumber
@@ -67,8 +70,11 @@ export const addCamera = async (req, res) => {
       logger.info(JSON.stringify(response));
       return res.status(409).json(response);
     }
-  } catch (error) {
-    const errorResponse = { success: false, data: { errorMessage: error } };
+  } catch (err) {
+    const errorResponse = {
+      success: false,
+      data: { errorMessage: err.message }
+    };
     logger.error(JSON.stringify(errorResponse));
     res.status(500).json(errorResponse);
   }
@@ -78,12 +84,18 @@ export const getCameraList = async (req, res) => {
   logger.info(JSON.stringify({ api: "/camera/getcameralist", ...req.query }));
   try {
     const { userId } = req.query;
+    if (!userId) {
+      throw new Error("User Id is required");
+    }
     const camera = await Camera.find({ userId: userId });
     const response = { success: true, data: { camera } };
     logger.info(JSON.stringify(response));
     return res.status(200).json(response);
-  } catch (error) {
-    const errorResponse = { success: false, data: { errorMessage: error } };
+  } catch (err) {
+    const errorResponse = {
+      success: false,
+      data: { errorMessage: err.message }
+    };
     logger.error(JSON.stringify(errorResponse));
     res.status(500).json(errorResponse);
   }
@@ -93,6 +105,9 @@ export const getCameraListWithCapabilities = async (req, res) => {
   logger.info(JSON.stringify({ api: "/camera/getcameraconfig", ...req.body }));
   try {
     const { userId, serialNumber } = req.body;
+    if (!userId || !serialNumber) {
+      throw new Error("Please provide complete parameters");
+    }
     const camera = await Camera.find({
       userId: userId,
       serialNumber: serialNumber
@@ -137,12 +152,12 @@ export const getCameraListWithCapabilities = async (req, res) => {
         logger.error("Error performing inner join:", err);
         console.error("Error performing inner join:", err);
       });
-  } catch (error) {
+  } catch (err) {
     const errorResponse = {
       success: false,
-      data: { errorMessage: "Internal Error" }
+      data: { errorMessage: err.message }
     };
     logger.error(JSON.stringify(errorResponse));
-    return res.status(500).json(errorResponse);
+    res.status(500).json(errorResponse);
   }
 };

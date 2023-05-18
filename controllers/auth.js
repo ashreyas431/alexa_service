@@ -13,6 +13,9 @@ export const registerUser = async (req, res) => {
 
   try {
     const { firstName, lastName, email, mobile, password } = req.body;
+    if(!firstName || !lastName || !email || !mobile|| !password) {
+      throw new Error("Please provide complete parameters")
+    }
     const salt = await bcrypt.genSalt();
     const passwordHash = await bcrypt.hash(password, salt);
     const userAlreadyRegistered = await User.find({ email: email });
@@ -38,11 +41,11 @@ export const registerUser = async (req, res) => {
     logger.info(JSON.stringify(response));
     res.status(201).json(response);
   } catch (err) {
-    const errorResponse = { success: 500, data: { errorMessage: err.message } };
+    const errorResponse = { success: false, data: { errorMessage: err.message } };
     logger.error(JSON.stringify(errorResponse));
     res
       .status(500)
-      .json({ success: false, data: { errorMessage: err.message } });
+      .json(errorResponse);
   }
 };
 
@@ -55,6 +58,9 @@ export const login = async (req, res) => {
   );
   try {
     const { email, password } = req.body;
+    if(!email || !password) {
+      throw new Error("Please provide complete parameters")
+    }
     const user = await User.findOne({ email: email });
     if (!user) {
       const response = {
@@ -86,6 +92,8 @@ export const login = async (req, res) => {
     logger.info(JSON.stringify(response));
     return res.status(200).json({ success: true, data: { token, user: response } });
   } catch (err) {
-    res.status(500).json({ success: true, data: { error: err.message } });
+    const errorResponse = { success: false, data: { errorMessage: err.message } };
+    logger.error(JSON.stringify(errorResponse));
+    res.status(500).json(errorResponse);
   }
 };

@@ -7,9 +7,9 @@ import helmet from 'helmet';
 import morgan from "morgan";
 import authRoutes from "./routes/auth.js";
 import camRoutes from "./routes/camera.js";
-import { ProductMaster, ProductSerialNumberMaster } from "./models/Master.js";
-import { cameraCapabilities, modelNumberMaster, serialNumberMaster } from "./data/data.js";
-import { CameraCapabilities } from "./models/Camera.js";
+// import { ProductMaster, ProductSerialNumberMaster } from "./models/Master.js";
+// import { cameraCapabilities, modelNumberMaster, serialNumberMaster } from "./data/data.js";
+// import { CameraCapabilities } from "./models/Camera.js";
 
 dotenv.config();
 const app = express();

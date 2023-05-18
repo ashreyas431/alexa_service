@@ -4,7 +4,14 @@ import User from "../models/User.js";
 import { logger } from "../logger/logger.js";
 
 export const registerUser = async (req, res) => {
-  logger.info(JSON.stringify(req.body));
+  logger.info(
+    JSON.stringify({
+      api: "/auth/registerUser",
+      ...req.body,
+      password: "Some password"
+    })
+  );
+
   try {
     const { firstName, lastName, email, mobile, password } = req.body;
     const salt = await bcrypt.genSalt();
@@ -12,7 +19,7 @@ export const registerUser = async (req, res) => {
     const userAlreadyRegistered = await User.find({ email: email });
     if (userAlreadyRegistered.length > 0) {
       const response = {
-        status: false,
+        success: false,
         data: {
           errorMessage: "User already registered"
         }
@@ -28,26 +35,32 @@ export const registerUser = async (req, res) => {
       password: passwordHash
     });
     const savedUser = await newUser.save();
-    const response = { status: true, data: savedUser };
+    const response = { success: true, data: savedUser };
     logger.info(JSON.stringify(response));
     res.status(201).json(response);
   } catch (err) {
-    const errorResponse = { status: 500, data: { errorMessage: err.message } };
+    const errorResponse = { success: 500, data: { errorMessage: err.message } };
     logger.error(JSON.stringify(errorResponse));
     res
       .status(500)
-      .json({ status: false, data: { errorMessage: err.message } });
+      .json({ success: false, data: { errorMessage: err.message } });
   }
 };
 
 export const login = async (req, res) => {
-  logger.info(JSON.stringify(req.body));
+  logger.info(
+    JSON.stringify({
+      api: "/auth/login",
+      ...req.body,
+      password: "some password"
+    })
+  );
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email: email });
     if (!user) {
       const response = {
-        status: false,
+        success: false,
         data: { errorMessage: "User does not exist." }
       };
       logger.info(JSON.stringify(response));
@@ -57,7 +70,7 @@ export const login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       const response = {
-        status: false,
+        success: false,
         data: { errorMessage: "Invalid credentials." }
       };
       logger.info(JSON.stringify(response));
@@ -73,8 +86,8 @@ export const login = async (req, res) => {
       mobile: user.mobile
     };
     logger.info(JSON.stringify(response));
-    res.status(200).json({ status: true, data: { token, user: response } });
+    res.status(200).json({ success: true, data: { token, user: response } });
   } catch (err) {
-    res.status(500).json({ status: true, data: { error: err.message } });
+    res.status(500).json({ success: true, data: { error: err.message } });
   }
 };

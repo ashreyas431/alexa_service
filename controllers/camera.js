@@ -1,8 +1,10 @@
 import { Camera } from "../models/Camera.js";
 import { ProductMaster, ProductSerialNumberMaster } from "../models/Master.js";
 import User from "../models/User.js";
+import { logger } from "../logger/logger.js";
 
 export const addCamera = async (req, res) => {
+  logger.info(JSON.stringify({ api: "/camera/addcamera", ...req.body }));
   try {
     const { userId, serialNumber, modelNumber, friendlyName } = req.body;
     const productId = await ProductMaster.find({ modelNumber: modelNumber });
@@ -19,12 +21,14 @@ export const addCamera = async (req, res) => {
       const checkCamera = await Camera.find({ serialNumber: serialNumber });
       const user = await User.findById(userId);
       if (!user) {
-        return res.status(401).json({
-          status: false,
+        const response = {
+          success: false,
           data: {
             errorMessage: "User not found"
           }
-        });
+        };
+        logger.info(JSON.stringify(response));
+        return res.status(401).json(response);
       }
       checkCamera.map(obj => {
         obj.serialNumber === serialNumber
@@ -32,10 +36,12 @@ export const addCamera = async (req, res) => {
           : (snAlreadyAdded = false);
       });
       if (snAlreadyAdded) {
-        return res.status(409).json({
-          status: false,
+        const response = {
+          success: false,
           data: { errorMessage: "Camera already exists" }
-        });
+        };
+        logger.info(JSON.stringify(response));
+        return res.status(409).json(response);
       }
       const newCamera = new Camera({
         userId: user.id,
@@ -47,31 +53,44 @@ export const addCamera = async (req, res) => {
       });
       await newCamera.save();
       const camera = await Camera.find({ userId: user.id });
-      return res.status(201).json({ status: true, data: { camera } });
-    } else
-      return res.status(409).json({
-        status: false,
+      const response = { success: true, data: { camera } };
+      logger.info(JSON.stringify(response));
+      return res.status(201).json(response);
+    } else {
+      const response = {
+        success: false,
         data: {
           errorMessage:
             "The Serial Number you provided does not match the records in our database"
         }
-      });
+      };
+      logger.info(JSON.stringify(response));
+      return res.status(409).json(response);
+    }
   } catch (error) {
-    res.status(500).json({ status: false, data: { errorMessage: error } });
+    const errorResponse = { success: false, data: { errorMessage: error } };
+    logger.error(JSON.stringify(errorResponse));
+    res.status(500).json(errorResponse);
   }
 };
 
 export const getCameraList = async (req, res) => {
+  logger.info(JSON.stringify({ api: "/camera/getcameralist", ...req.query }));
   try {
     const { userId } = req.query;
     const camera = await Camera.find({ userId: userId });
-    return res.status(200).json({ status: true, data: { camera } });
+    const response = { success: true, data: { camera } };
+    logger.info(JSON.stringify(response));
+    return res.status(200).json(response);
   } catch (error) {
-    res.status(409).json({ status: false, data: { errorMessage: error } });
+    const errorResponse = { success: false, data: { errorMessage: error } };
+    logger.error(JSON.stringify(errorResponse));
+    res.status(500).json(errorResponse);
   }
 };
 
 export const getCameraListWithCapabilities = async (req, res) => {
+  logger.info(JSON.stringify({ api: "/camera/getcameraconfig", ...req.body }));
   try {
     const { userId, serialNumber } = req.body;
     const camera = await Camera.find({
@@ -80,13 +99,15 @@ export const getCameraListWithCapabilities = async (req, res) => {
     });
 
     if (camera.length === 0) {
-      return res.status(404).json({
-        status: false,
+      const response = {
+        success: false,
         data: {
           errorMessage:
             "The camera is not associated with this account. Please add this camera to get its configuration."
         }
-      });
+      };
+      logger.info(JSON.stringify(response));
+      return res.status(404).json(response);
     }
     Camera.aggregate([
       {
@@ -105,17 +126,23 @@ export const getCameraListWithCapabilities = async (req, res) => {
         const results2 = results.filter(
           obj => obj.serialNumber === serialNumber
         );
-        return res.status(200).json({
-          status: true,
+        const response = {
+          success: true,
           data: results2
-        });
+        };
+        logger.info(JSON.stringify(response));
+        return res.status(200).json(response);
       })
       .catch(err => {
+        logger.error("Error performing inner join:", err);
         console.error("Error performing inner join:", err);
       });
   } catch (error) {
-    return res
-      .status(500)
-      .json({ status: false, data: { errorMessage: "Internal Error" } });
+    const errorResponse = {
+      success: false,
+      data: { errorMessage: "Internal Error" }
+    };
+    logger.error(JSON.stringify(errorResponse));
+    return res.status(500).json(errorResponse);
   }
 };

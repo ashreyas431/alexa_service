@@ -9,7 +9,8 @@ import authRoutes from "./routes/auth.js";
 import camRoutes from "./routes/camera.js";
 // import { ProductMaster, ProductSerialNumberMaster } from "./models/Master.js";
 // import { cameraCapabilities, modelNumberMaster, serialNumberMaster } from "./data/data.js";
-// import { CameraCapabilities } from "./models/Camera.js";
+// import { Camera, CameraCapabilities } from "./models/Camera.js";
+// import User from "./models/User.js";
 
 dotenv.config();
 const app = express();
@@ -26,17 +27,24 @@ app.use("/camera", camRoutes);
 
 const PORT = process.env.PORT || 3000;
 
+app.get("/", (req, res) => {
+  res.send(`Server running at ${PORT}`);
+});
+
 mongoose
   .connect(process.env.MONGO_URL, {
     useNewUrlParser: true,
     useUnifiedTopology: true
   })
-  .then(() => {
+  .then(async () => {
     app.listen(PORT, () => console.log(`Server Port: ${PORT}`));
     console.log("Service connected ", PORT);
+    // await CameraCapabilities.deleteMany({})
     // CameraCapabilities.insertMany(cameraCapabilities)
     // await ProductMaster.deleteMany({})
     // await ProductSerialNumberMaster.deleteMany({})
     // ProductMaster.insertMany(modelNumberMaster);
-    // ProductSerialNumberMaster.insertMany(serialNumberMaster)
+    // ProductSerialNumberMaster.insertMany(serialNumberMaster);
+    // await User.deleteMany({});
+    // await Camera.deleteMany({});
   }).catch(error=>console.error(`${error} did not connect to mongo server`));

@@ -7,8 +7,7 @@ export const registerUser = async (req, res) => {
   logger.info(
     JSON.stringify({
       api: "/auth/registerUser",
-      ...req.body,
-      password: "Some password"
+      ...req.body
     })
   );
 
@@ -51,8 +50,7 @@ export const login = async (req, res) => {
   logger.info(
     JSON.stringify({
       api: "/auth/login",
-      ...req.body,
-      password: "some password"
+      ...req.body
     })
   );
   try {
@@ -86,7 +84,7 @@ export const login = async (req, res) => {
       mobile: user.mobile
     };
     logger.info(JSON.stringify(response));
-    res.status(200).json({ success: true, data: { token, user: response } });
+    return res.status(200).json({ success: true, data: { token, user: response } });
   } catch (err) {
     res.status(500).json({ success: true, data: { error: err.message } });
   }
